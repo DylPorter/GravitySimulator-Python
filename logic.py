@@ -18,6 +18,7 @@ class Body:
         self.pos.y += (self.v.y * timestep) + (0.5 * self.a.y * math.pow(timestep, 2))
         # x(t+dt) = x(t) + v(t)dt + (1/2)(a)(t^2)
         
+    # BUG: objects speed up the more objects there are... why???
     def calculate_vel_acc(self, other, timestep):
         force = self.find_force(other)
 

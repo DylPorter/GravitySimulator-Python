@@ -2,9 +2,9 @@ import pyray, logic
 
 class Window:
     def __init__(self):
-        self.window_width = 1800
-        self.window_height = 1450
-        pyray.set_target_fps(60)
+        self.window_width = logic.window_width
+        self.window_height = logic.window_height
+        pyray.set_target_fps(1000)
 
     def start(self):
         pyray.init_window(self.window_width, self.window_height, "Hello")
@@ -21,7 +21,7 @@ class Window:
                 new_body = logic.Body(pyray.get_mouse_position(),   # Position
                                       pyray.vector2_zero(),         # Velocity
                                       pyray.vector2_zero(),         # Acceleration
-                                      15,                           # Radius
+                                      5,                            # Radius
                                       pyray.WHITE)                  # Colour
                 logic.bodies.append(new_body)
 

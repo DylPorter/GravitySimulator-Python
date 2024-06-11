@@ -1,8 +1,10 @@
 import pyray, math
 
+window_width = 1000
+window_height = 1000
+
 class Body:
     def __init__(self, pos, v, a, radius, colour):
-        self.prev_pos = pos
         self.pos = pos
         self.v = v
         self.a = a
@@ -11,7 +13,7 @@ class Body:
 
         # Consider adding self.density, value between 0 to 1 to multiply the mass by
 
-        self.mass = math.pi * ((self.radius)**2) # Area of a circle
+        self.mass = math.pi * math.pow(self.radius, 2) # Area of a circle
 
     def update_position(self, timestep):
         self.pos.x += (self.v.x * timestep) + (0.5 * self.a.x * math.pow(timestep, 2))
@@ -43,6 +45,44 @@ class Body:
         y_force = force * (y_dist / hypo)
 
         return pyray.Vector2(x_force, y_force)
+    
+    def is_in_boundary(corner, width, height):
+        if corner.x < self.pos.x < (corner.x + width) and corner.y < self.pos.y < (corner.y + height):
+            return True
 
+
+class Node:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+
+        self.body = None
+        self.centre = pyray.vector2_zero()
+        self.total_mass = 0
+        self.body_count = 0
+
+        self.leaf = True
+        self.children = []
+
+    def split(self):
+        half_width = 0.5 * self.width
+        half_height = 0.5 * self.height
+
+        self.children.append(Node(x, y, half_width, half_height)) # nw
+        self.children.append(Node(x+half_width, y, half_width, half_height)) # ne
+        self.children.append(Node(x, y+half_height, half_width, half_height)) # sw
+        self.children.append(Node(x+half_width, y+half_height, half_width, half_height)) # se
+
+    def add_body(self, new_body):
+        if self.leaf == True:
+            if self.body == None:
+                pass
+            self.centre.x += new_body.pos.x # Find a better way to add the centre of mass
+            self.centre.y += new_body.pos.y
+            self.total_mass += new_body.mass
+            self.body_count += 1
+        pass
 
 bodies = []

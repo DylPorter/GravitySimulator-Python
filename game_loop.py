@@ -12,15 +12,12 @@ class Window:
         menu = pyray.Rectangle(10, 10, 300, 300)
 
         menu_string_1 = "radius"
-        menu_string_2 = "mass"
-
         menu_box_1 = textbox.Box(pyray.Vector2(menu.x+20, menu.y+60), pyray.Vector2(menu.width-50, 50), 2)
-        menu_box_2 = textbox.Box(pyray.Vector2(menu.x+20, menu.y+160), pyray.Vector2(menu.width-50, 50), 5)
-
 
         body_initialised = False
 
         while not pyray.window_should_close():
+            print(len(logic.bodies))
             mouse_pos = pyray.get_mouse_position()
 
             if pyray.is_key_down(32):
@@ -30,25 +27,16 @@ class Window:
 
             if pyray.is_mouse_button_pressed(0):
                 menu_box_1.click(mouse_pos)
-                menu_box_2.click(mouse_pos)
 
-                if pyray.check_collision_point_rec(mouse_pos, menu):
-                    print("TRUE")
-
-                else:
+                if pyray.check_collision_point_rec(mouse_pos, menu) == False:
                     radius = menu_box_1.get_value()
-                    mass = menu_box_2.get_value()
 
                     if radius == 0:
                         radius = 10
 
-                    if mass == 0:
-                        mass = math.pow(radius, 2) * 3
-
                     new_body = logic.Body(pyray.get_mouse_position(),   # Position
                                           pyray.vector2_zero(),         # Velocity
-                                          pyray.vector2_zero(),         # Acceleration
-                                          radius, mass)
+                                          radius)
 
                     logic.bodies.append(new_body)
                     body_initialised = True
@@ -64,6 +52,13 @@ class Window:
                 body_initialised = False
 
             for body in logic.bodies:
+                body_position = body.get_pos()
+                
+                if (-self.window_width*1.2 < body_position.x < self.window_width*1.2) == False or \
+                        (-self.window_height*1.2 < body_position.y < self.window_height*1.2) == False:
+                    logic.bodies.remove(body)
+                    continue
+
                 if body.check_active() == True:
                     body.update_position(timestep)
 
@@ -72,10 +67,13 @@ class Window:
                             body.calculate_vel_acc(other, timestep)
 
                             if body.collision_check(other) == True:
-                                if body.get_rad() > 1: 
-                                    mass_ratio = body.get_mass() / other.get_mass()
+                                body.calculate_collision_velocity(other)
 
-                                    if mass_ratio < 1:
+                                if body.get_rad() > 2: 
+                                    mass_ratio = body.get_mass() / other.get_mass()
+                                    print(mass_ratio)
+
+                                    if mass_ratio <= 0.9:
                                         body_children = body.collapse(other)
                                         
                                         for child in body_children:
@@ -85,7 +83,7 @@ class Window:
                                             logic.bodies.remove(body)
                                             break
 
-                                    elif mass_ratio == 1:
+                                    elif 0.9 < mass_ratio <= 1.1:
                                         body_children = body.collapse(other)
                                         other_children = other.collapse(body)
                                         
@@ -96,11 +94,28 @@ class Window:
 
                                         if len(body_children) > 0:
                                             logic.bodies.remove(body)
+                                            if len(other_children) > 0:
+                                                logic.bodies.remove(other)
+                                            break
+                                        elif len(other_children) > 0:
                                             logic.bodies.remove(other)
+                                            if len(body_children) > 0:
+                                                logic.bodies.remove(body)
                                             break
 
-                                if body.get_rad() <= 1:
-                                    other.increase_mass(body.get_mass())
+                                    else:
+                                        other_children = other.collapse(body)
+                                        
+                                        for child in other_children:
+                                            logic.bodies.append(child)
+
+                                        if len(other_children) > 0:
+                                            logic.bodies.remove(other)
+                                            break
+                                else:
+#                                    print(body.get_rad(), other.get_rad())
+                                    other.increase_size(1)
+#                                    print(other.get_rad(), "updated")
                                     logic.bodies.remove(body)
                                     break
 
@@ -115,10 +130,8 @@ class Window:
 
             pyray.draw_rectangle_rec(menu, pyray.GRAY)
             pyray.draw_text(menu_string_1, 30, 30, 30, pyray.BLACK)
-            pyray.draw_text(menu_string_2, 30, 130, 30, pyray.BLACK)
 
             menu_box_1.draw()
-            menu_box_2.draw()
 
             pyray.end_mode_2d()
             pyray.end_drawing()

@@ -6,19 +6,21 @@ window_height = 1000
 bodies = []
 
 class Body:
-    def __init__(self, pos, v, a, radius, mass):
+    def __init__(self, pos, v, radius):
         self.__pos = pos
         self.__v = v
-        self.__a = a
         self.__radius = radius
-        self.__mass = mass 
+
+        self.__a = pyray.vector2_zero()
+        self.__momentum = pyray.vector2_zero()
+        self.__mass = math.pow(radius, 2)
 
         self.__colour = pyray.RED
         self.__is_active = False
 
 
     def update_position(self, timestep):
-#        self.__radius = math.sqrt(self.__mass/3)
+        self.__mass = math.pow(self.__radius, 2)
         self.__pos.x += (self.__v.x * timestep) + (0.5 * self.__a.x * math.pow(timestep, 2))
         self.__pos.y += (self.__v.y * timestep) + (0.5 * self.__a.y * math.pow(timestep, 2))
         # x(t+dt) = x(t) + v(t)dt + (1/2)(a)(t^2)
@@ -33,6 +35,9 @@ class Body:
 
         self.__v.x += 0.5 * (self.__a.x + new_a_x) * timestep     # v(t+dt) = v(t) + (1/2)at
         self.__v.y += 0.5 * (self.__a.y + new_a_y) * timestep
+
+        self.__momentum.x = self.__mass * self.__v.x
+        self.__momentum.y = self.__mass * self.__v.y
 
         self.__a.x = new_a_x
         self.__a.y = new_a_y
@@ -63,6 +68,10 @@ class Body:
         self.__v.y += value_vec.y
 
 
+    def set_new_velocity(self, vector):
+        self.__v = vector
+
+
     def find_x_y_distance(self, point):
         x_dist = (point.x - self.__pos.x)
         y_dist = (point.y - self.__pos.y)
@@ -80,23 +89,27 @@ class Body:
 
     
     def collision_check(self, other):
-        if pyray.check_collision_circles(self.__pos, self.__radius, other.get_pos(), other.get_rad()):
+        if pyray.check_collision_circles(self.__pos, self.__radius, 
+                                         other.get_pos(), other.get_rad()):
             return True
 
 
     def collapse(self, other):
         children = []
-        
-        for i in range(10):
-            child = Body(pyray.Vector2(self.__pos.x + random.random(),
-                                       self.__pos.y + random.random()),
-                         pyray.vector2_zero(),
-                         pyray.vector2_zero(),
-                         math.ceil(self.__radius/10),
-                         math.ceil(self.__mass/10))
+        num_children = 10
 
-            random_vec = pyray.Vector2(int(self.__v.x * 0.01 * random.random()),
-                                       int(self.__v.y * 0.01 * random.random()))
+        if self.__radius < 10:
+            num_children = math.ceil(self.__radius)
+        
+        for i in range(num_children):
+            child = Body(pyray.Vector2(self.__pos.x + self.__radius * random.uniform(-1, 1),
+                                       self.__pos.y + self.__radius * random.uniform(-1, 1)),
+                         pyray.Vector2(self.__v.x * 0.2,
+                                       self.__v.y * 0.2),
+                         math.ceil(self.__radius / num_children))
+
+            random_vec = pyray.Vector2(int(self.__v.x * random.random()),
+                                       int(self.__v.y * random.random()))
 
             child.push_velocity(random_vec)
             child.make_active()
@@ -105,15 +118,57 @@ class Body:
 
         return children
 
+
+    def calculate_collision_velocity(self, other):
+        other_mass = other.get_mass()
+        other_v = other.get_vel()
+
+        normal_vec = self.find_x_y_distance(other.get_pos())
+        hypo = math.sqrt(math.pow(normal_vec.x, 2) + math.pow(normal_vec.y, 2))
+
+        # unit normal & tangent vectors of the 2 circles
+        u_norm_vec = pyray.Vector2((normal_vec.x / hypo), (normal_vec.y / hypo))
+        u_tan_vec = pyray.Vector2(-u_norm_vec.y, u_norm_vec.x) 
+
+        # project velocity onto the vectors with dot product to get scalar 1-dimensional values
+        self_normal_vel = (u_norm_vec.x * self.__v.x) + (u_norm_vec.y * self.__v.y)
+        self_tangent_vel = (u_tan_vec.x * self.__v.x) + (u_tan_vec.y * self.__v.y)
+
+        other_normal_vel = (u_norm_vec.x * other_v.x) + (u_norm_vec.y * other_v.y)
+        other_tangent_vel = (u_tan_vec.x * other_v.x) + (u_tan_vec.y * other_v.y)
+
+        # calculate scalar values of new normal velocities
+        self_new_vel = (self_normal_vel * (self.__mass - other_mass) +
+                (2 * other_mass * other_normal_vel)) / (self.__mass + other_mass)
+        other_new_vel = (other_normal_vel * (other_mass - self.__mass) +
+                (2 * self.__mass * self_normal_vel)) / (self.__mass + other_mass)
+
+        # convert scalar values back into vector values
+        self_new_vel_vec = pyray.Vector2((self_new_vel * u_norm_vec.x) + 
+                                         (self_tangent_vel * u_tan_vec.x),
+                                         (self_new_vel * u_norm_vec.y) +
+                                         (self_tangent_vel * u_tan_vec.y))
+
+        other_new_vel_vec = pyray.Vector2((other_new_vel * u_norm_vec.x) + 
+                                          (other_tangent_vel * u_tan_vec.x),
+                                          (other_new_vel * u_norm_vec.y) +
+                                          (other_tangent_vel * u_tan_vec.y))
+
+        self.set_new_velocity(self_new_vel_vec)
+        other.set_new_velocity(other_new_vel_vec)
+
     
-    def increase_mass(self, amount):
-        self.__mass += amount
+    def increase_size(self, amount):
+        self.__radius += amount
 
     def check_active(self):
         return self.__is_active
 
     def get_pos(self):
         return self.__pos
+    
+    def get_vel(self):
+        return self.__v
 
     def get_rad(self):
         return self.__radius

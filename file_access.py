@@ -6,6 +6,7 @@ def save():
     for body in logic.bodies:
         body_data = []
         if body.get_active() == True:
+            body_data.append(body.get_density())
             body_data.append(body.get_pos())
             body_data.append(body.get_vel())
             body_data.append(body.get_acc())
@@ -17,11 +18,12 @@ def save():
     file = open("save_game.txt", "w")
 
     for item in data_2d_array:
-        file.write("%s/%s/%s/%s/%s/%s/%s/%s/%s\n" % (item[0].x, item[0].y,      # Position
-                                                     item[1].x, item[1].y,      # Velocity
-                                                     item[2].x, item[2].y,      # Acceleration
-                                                     item[3],                   # Radius
-                                                     item[4].x, item[4].y))     # Momentum
+        file.write("%s/%s/%s/%s/%s/%s/%s/%s/%s/%s\n" % (item[0],                # Density
+                                                        item[1].x, item[1].y,   # Position
+                                                        item[2].x, item[2].y,   # Velocity
+                                                        item[3].x, item[3].y,   # Acceleration
+                                                        item[4],                # Radius
+                                                        item[5].x, item[5].y))  # Momentum
     
     file.close()
 
@@ -46,12 +48,28 @@ def load():
                 continue
             value += char
 
-        new_body = logic.Body(pyray.Vector2(float(body_info[0]), float(body_info[1])),
-                              pyray.Vector2(float(body_info[2]), float(body_info[3])),
-                              pyray.Vector2(float(body_info[4]), float(body_info[5])),
-                              int(body_info[6]),
-                              pyray.Vector2(float(body_info[7]), float(body_info[8])),
-                              True)
+        if int(body_info[0]) == 1:
+            new_body = logic.Planet(pyray.Vector2(float(body_info[1]), float(body_info[2])),
+                                    pyray.Vector2(float(body_info[3]), float(body_info[4])),
+                                    pyray.Vector2(float(body_info[5]), float(body_info[6])),
+                                    int(body_info[7]),
+                                    pyray.Vector2(float(body_info[8]), float(body_info[9])),
+                                    True)
+        elif int(body_info[0]) == 10:
+            new_body = logic.Star(pyray.Vector2(float(body_info[1]), float(body_info[2])),
+                                  pyray.Vector2(float(body_info[3]), float(body_info[4])),
+                                  pyray.Vector2(float(body_info[5]), float(body_info[6])),
+                                  int(body_info[7]),
+                                  pyray.Vector2(float(body_info[8]), float(body_info[9])),
+                                  True)
+        else:
+            new_body = logic.Hole(pyray.Vector2(float(body_info[1]), float(body_info[2])),
+                                  pyray.Vector2(float(body_info[3]), float(body_info[4])),
+                                  pyray.Vector2(float(body_info[5]), float(body_info[6])),
+                                  int(body_info[7]),
+                                  pyray.Vector2(float(body_info[8]), float(body_info[9])),
+                                  True)
+
 
         logic.bodies.append(new_body)
     

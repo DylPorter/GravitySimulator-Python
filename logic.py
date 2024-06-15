@@ -6,17 +6,20 @@ window_height = 1000
 bodies = []
 
 class Body:
-    def __init__(self, pos, v, radius):
+    def __init__(self, pos, v, a, radius, momentum, is_active):
         self.__pos = pos
         self.__v = v
+        self.__a = a
         self.__radius = radius
+        self.__momentum = momentum
+        self.__is_active = is_active
 
-        self.__a = pyray.vector2_zero()
-        self.__momentum = pyray.vector2_zero()
-        self.__mass = math.pow(radius, 2)
+        self.__mass = math.pow(self.__radius, 2)
 
-        self.__colour = pyray.RED
-        self.__is_active = False
+        if is_active == True:
+            self.__colour = pyray.WHITE
+        else:
+            self.__colour = pyray.RED
 
 
     def update_position(self, timestep):
@@ -106,7 +109,10 @@ class Body:
                                        self.__pos.y + self.__radius * random.uniform(-1, 1)),
                          pyray.Vector2(self.__v.x * 0.2,
                                        self.__v.y * 0.2),
-                         math.ceil(self.__radius / num_children))
+                         pyray.vector2_zero(),
+                         math.ceil(self.__radius / num_children),
+                         pyray.vector2_zero(),
+                         True)
 
             random_vec = pyray.Vector2(int(self.__v.x * random.random()),
                                        int(self.__v.y * random.random()))
@@ -172,10 +178,18 @@ class Body:
 
     def get_rad(self):
         return self.__radius
-    
-    def get_colour(self):
-        return self.__colour
 
+    def get_acc(self):
+        return self.__a
+
+    def get_momentum(self):
+        return self.__momentum
+
+    def get_active(self):
+        return self.__is_active
+    
     def get_mass(self):
         return self.__mass
 
+    def get_colour(self):
+        return self.__colour

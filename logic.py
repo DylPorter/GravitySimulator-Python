@@ -1,7 +1,7 @@
 import pyray, math, random
 
-window_width = 1000
-window_height = 1000
+window_width = 1200
+window_height = 1200
 
 bodies = []
 
@@ -16,7 +16,7 @@ class Body:
 
         self.__mass = math.pow(self.__radius, 2)
 
-        if is_active == True:
+        if is_active:
             self.__colour = pyray.WHITE
         else:
             self.__colour = pyray.RED
@@ -70,9 +70,17 @@ class Body:
         self.__v.x += value_vec.x
         self.__v.y += value_vec.y
 
+    
+    def set_new_position(self, vector):
+        self.__pos = vector
+
 
     def set_new_velocity(self, vector):
         self.__v = vector
+
+
+    def set_new_radius(self, radius):
+        self.__radius = radius
 
 
     def find_x_y_distance(self, point):
@@ -82,13 +90,17 @@ class Body:
         return pyray.Vector2(x_dist, y_dist)
     
 
-    def is_outside_circle(self, dist, radius):
-        return ((math.pow(dist.x, 2) + math.pow(dist.y, 2)) > math.pow(radius, 2))
+    def is_outside_circle(self, dist):
+        return ((math.pow(dist.x, 2) + math.pow(dist.y, 2)) > math.pow(self.__radius, 2))
 
 
     def make_active(self):
         self.__is_active = True
         self.__colour = pyray.WHITE
+
+
+    def make_inactive(self):
+        self.__is_active = False
 
     
     def collision_check(self, other):
@@ -116,10 +128,7 @@ class Body:
 
             random_vec = pyray.Vector2(int(self.__v.x * random.random()),
                                        int(self.__v.y * random.random()))
-
             child.push_velocity(random_vec)
-            child.make_active()
-
             children.append(child)
 
         return children
@@ -163,9 +172,13 @@ class Body:
         self.set_new_velocity(self_new_vel_vec)
         other.set_new_velocity(other_new_vel_vec)
 
+
+    def change_colour(self, colour):
+        self.__colour = colour
     
     def increase_size(self, amount):
-        self.__radius += amount
+        if self.__radius < 99:
+            self.__radius += amount
 
     def check_active(self):
         return self.__is_active

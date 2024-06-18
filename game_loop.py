@@ -99,6 +99,11 @@ class Window:
 
                 tooltip.box_click(mouse_pos)
 
+                if button_4.get_active():
+                    logic.repulsion = -1
+                else:
+                    logic.repulsion = 1
+
                 if not pyray.check_collision_point_rec(mouse_pos, menu) and \
                         not pyray.check_collision_point_rec(mouse_pos, sort_box) and \
                         not pause_menu.get_active():
@@ -141,11 +146,6 @@ class Window:
                                                       radius,                   # Radius
                                                       pyray.vector2_zero(),     # Momentum
                                                       False)                    # is_active
-
-                            if button_4.get_active():
-                                logic.repulsion = -1
-                            else:
-                                logic.repulsion = 1
 
                             logic.bodies.append(new_body)
                             body_initialised = True

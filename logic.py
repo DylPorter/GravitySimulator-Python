@@ -122,12 +122,12 @@ class Planet:
         for i in range(num_children):
             child = Planet(pyray.Vector2(self._pos.x + self._radius * random.uniform(-1, 1),
                                          self._pos.y + self._radius * random.uniform(-1, 1)),
-                         pyray.Vector2(self._v.x * 0.2,
-                                       self._v.y * 0.2),
-                         pyray.vector2_zero(),
-                         math.ceil(self._radius / num_children),
-                         pyray.vector2_zero(),
-                         True)
+                           pyray.Vector2(self._v.x * 0.2,
+                                         self._v.y * 0.2),
+                           pyray.vector2_zero(),
+                           math.ceil(self._radius / num_children),
+                           pyray.vector2_zero(),
+                           True)
 
             random_vec = pyray.Vector2(int(self._v.x * random.random()),
                                        int(self._v.y * random.random()))

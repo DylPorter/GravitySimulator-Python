@@ -145,7 +145,7 @@ class PopUp:
         self.__object = clicked_object
 
         if self.__object != None:
-            self.__object.change_colour(pyray.YELLOW)
+            self.__object.change_colour(pyray.BLUE)
 
         if popup_type == "tooltip":
             self.__size.x = 100
